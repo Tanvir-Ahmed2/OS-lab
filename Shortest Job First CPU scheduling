@@ -1,0 +1,84 @@
+#include<bits/stdc++.h>
+using namespace std;
+
+struct process
+{
+    int pid;
+    int at;
+    int ct;
+    int wt;
+    int tat;
+    bool completed;
+    int st;
+    int ft;
+} p[10];
+
+bool sortbyAT(process a, process b)
+{
+    return a.at < b.at;
+}
+
+int main()
+{
+    int n;
+    cin >> n;
+    for (int i = 0; i < n; i++)
+    {
+        cin >> p[i].at;
+        cin >> p[i].ct;
+        p[i].pid = i + 1;
+        p[i].completed = false;
+    }
+
+    sort(p, p + n, sortbyAT);
+    int crn = 0, completed_processes = 0;
+
+    vector<pair<int, pair<int, int>>> gantt_chart;
+    
+    while (completed_processes < n)
+    {
+        int id = -1;
+        int min_ct = INT_MAX;
+
+        for (int i = 0; i < n; i++)
+        {
+            if (p[i].at <= crn && !p[i].completed && p[i].ct < min_ct)
+            {
+                min_ct = p[i].ct;
+                id = i;
+            }
+        }
+
+        if (id != -1)
+        {
+            p[id].st = crn;
+            p[id].wt = crn - p[id].at;
+            p[id].tat = p[id].wt + p[id].ct;
+            crn += p[id].ct;
+            p[id].ft = crn;
+            p[id].completed = true;
+            completed_processes++;
+
+            gantt_chart.push_back({p[id].pid, {p[id].st, p[id].ft}});
+        }
+        else
+        {
+            crn++;
+        }
+    }
+
+    cout << "\nPROCESS DETAILS :\n";
+    for (int i = 0; i < n; i++)
+    {
+        cout << "p" << p[i].pid << ": Waiting Time = " << p[i].wt << ", Turnaround Time = " << p[i].tat << endl;
+    }
+
+    cout << "\nGANTT CHART:\n";
+    for (auto g : gantt_chart)
+    {
+        cout << "| P" << g.first << " (" << g.second.first << " - " << g.second.second << ") ";
+    }
+    cout << "|" << endl;
+
+    return 0;
+}
