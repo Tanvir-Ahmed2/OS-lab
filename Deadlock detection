@@ -1,0 +1,98 @@
+#include <iostream>
+#include <vector>
+#include <unordered_map>
+#include <stack>
+
+using namespace std;
+
+class Graph {
+    unordered_map<string, vector<string>> adjList; // Adjacency list
+    unordered_map<string, bool> visited;           // To track visited nodes
+    unordered_map<string, bool> recursionStack;    // To track the recursion stack for cycle detection
+
+public:
+    // Add a directed edge from node u to node v
+    void addEdge(const string& u, const string& v) {
+        adjList[u].push_back(v);
+    }
+
+    // Utility function to perform DFS and detect cycles
+    bool dfs(const string& node, vector<string>& cycleNodes) {
+        if (!visited[node]) {
+            // Mark the current node as visited and part of the recursion stack
+            visited[node] = true;
+            recursionStack[node] = true;
+            
+            // Recur for all neighbors
+            for (const string& neighbor : adjList[node]) {
+                if (!visited[neighbor] && dfs(neighbor, cycleNodes)) {
+                    // If a cycle is found, include the node in the cycle
+                    cycleNodes.push_back(node);
+                    return true;
+                } else if (recursionStack[neighbor]) {
+                    // If the neighbor is already in the recursion stack, cycle detected
+                    cycleNodes.push_back(node);
+                    return true;
+                }
+            }
+        }
+        // Remove the node from the recursion stack
+        recursionStack[node] = false;
+        return false;
+    }
+
+    // Function to detect a deadlock (cycle) in the graph
+    void detectDeadlock(int numNodes, const vector<string>& nodes) {
+        visited.clear();
+        recursionStack.clear();
+        vector<string> cycleNodes;
+
+        for (const string& node : nodes) {
+            visited[node] = false;
+            recursionStack[node] = false;
+        }
+
+        // Check for cycles (deadlocks) in all nodes
+        for (const string& node : nodes) {
+            if (!visited[node]) {
+                if (dfs(node, cycleNodes)) {
+                    cout << "1 - Deadlock Detected Among nodes: ";
+                    for (int i = cycleNodes.size() - 1; i >= 0; --i) {
+                        cout << cycleNodes[i] << " ";
+                    }
+                    cout << endl;
+                    return;
+                }
+            }
+        }
+
+        cout << "No Deadlock Detected." << endl;
+    }
+};
+
+int main() {
+    Graph g;
+    int numNodes;
+    cout << "Enter number of nodes: ";
+    cin >> numNodes;
+
+    vector<string> nodes(numNodes);
+    cout << "Enter node names: ";
+    for (int i = 0; i < numNodes; ++i) {
+        cin >> nodes[i];
+    }
+
+    int numEdges;
+    cout << "Enter number of edges: ";
+    cin >> numEdges;
+    cout << "Enter edges (in format 'U to V'): " << endl;
+    for (int i = 0; i < numEdges; ++i) {
+        string u, v, to;
+        cin >> u >> to >> v;
+        g.addEdge(u, v);
+    }
+
+    g.detectDeadlock(numNodes, nodes);
+
+    return 0;
+}
